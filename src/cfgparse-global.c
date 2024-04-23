@@ -52,7 +52,7 @@ static const char *common_kw_list[] = {
 	"presetenv", "unsetenv", "resetenv", "strict-limits", "localpeer",
 	"numa-cpu-mapping", "defaults", "listen", "frontend", "backend",
 	"peers", "resolvers", "cluster-secret", "no-quic", "limited-quic",
-	NULL /* must be last */
+	"no-mptcp", NULL /* must be last */
 };
 
 /*
@@ -1333,6 +1333,11 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 
 			HA_ATOMIC_STORE(&global.anon_key, tmp);
 		}
+	}
+	else if (strcmp(args[0], "no-mptcp") == 0) {
+		if (alertif_too_many_args(0, file, linenum, args, &err_code))
+			goto out;
+		global.tune.options |= GTUNE_NO_MPTCP;
 	}
 	else {
 		struct cfg_kw_list *kwl;

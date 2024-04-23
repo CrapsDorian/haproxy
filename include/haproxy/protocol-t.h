@@ -28,6 +28,12 @@
 #include <import/ebtree-t.h>
 #include <haproxy/api-t.h>
 
+#ifdef __linux__
+#ifndef IPPROTO_MPTCP
+#define IPPROTO_MPTCP
+#endif
+#endif
+
 /* some pointer types referenced below */
 struct listener;
 struct receiver;
@@ -99,6 +105,7 @@ struct protocol {
 	enum proto_type proto_type;                     /* protocol type at the socket layer (PROTO_TYPE_*) */
 	int sock_type;					/* socket type, as passed to socket()     */
 	int sock_prot;					/* socket protocol, as passed to socket() */
+	int sock_prot_fb;				/* fallback socket protocol, as passed to socket() */
 
 	/* functions acting on the listener */
 	void (*add)(struct protocol *p, struct listener *l); /* add a listener for this protocol */

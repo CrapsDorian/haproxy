@@ -104,11 +104,22 @@ int protocol_supports_flag(struct protocol *proto, uint flag)
 			return 1;
 
 		/* run a live check */
-		ret = _sock_supports_reuseport(proto->fam, proto->sock_type, proto->sock_prot);
+		if (proto->sock_prot_fb > 0 && global.tune.options & GTUNE_NO_MPTCP) {
+			ret = _sock_supports_reuseport(proto->fam, proto->sock_type, proto->sock_prot_fb);
+		} else {
+			ret = _sock_supports_reuseport(proto->fam, proto->sock_type, proto->sock_prot);
+
+			/* retry with the fall back protocol */
+			if (proto->sock_prot_fb > 0 && !ret)
+				ret = _sock_supports_reuseport(proto->fam, proto->sock_type,
+				                               proto->sock_prot_fb);
+		}
+
 		if (!ret)
-			_HA_ATOMIC_AND(&proto->flags, ~PROTO_F_REUSEPORT_SUPPORTED);
+			HA_ATOMIC_AND(&proto->flags, ~PROTO_F_REUSEPORT_SUPPORTED);
 
 		_HA_ATOMIC_OR(&proto->flags, PROTO_F_REUSEPORT_TESTED);
+
 		return ret;
 	}
 	return 0;

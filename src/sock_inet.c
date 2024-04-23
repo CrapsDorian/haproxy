@@ -327,8 +327,22 @@ int sock_inet_bind_receiver(struct receiver *rx, char **errmsg)
 	ext = (fd >= 0);
 
 	if (!ext) {
-		fd = my_socketat(rx->settings->netns, rx->proto->fam->sock_domain,
-		                 rx->proto->sock_type, rx->proto->sock_prot);
+		if (rx->proto->sock_prot_fb > 0 && global.tune.options & GTUNE_NO_MPTCP) {
+			fd = my_socketat(rx->settings->netns, rx->proto->fam->sock_domain,
+			                 rx->proto->sock_type, rx->proto->sock_prot_fb);
+		} else {
+			fd = my_socketat(rx->settings->netns, rx->proto->fam->sock_domain,
+			                 rx->proto->sock_type, rx->proto->sock_prot);
+
+			/*
+			* If we failed to create a socket, try to create a fallback socket
+			* with the fallback protocol.
+			*/
+			if (rx->proto->sock_prot_fb > 0 && fd == -1) 
+				fd = my_socketat(rx->settings->netns, rx->proto->fam->sock_domain,
+				                 rx->proto->sock_type, rx->proto->sock_prot_fb);
+		}
+
 		if (fd == -1) {
 			err |= ERR_RETRYABLE | ERR_ALERT;
 			memprintf(errmsg, "cannot create receiving socket (%s)", strerror(errno));
