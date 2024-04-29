@@ -1193,7 +1193,7 @@ int cfg_parse_mailers(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		if (proto->sock_prot != IPPROTO_TCP) {
+		if (proto->sock_prot != IPPROTO_TCP && proto->sock_prot_fb != IPPROTO_TCP) {
 			ha_alert("parsing [%s:%d] : '%s %s' : TCP not supported for this address family.\n",
 				 file, linenum, args[0], args[1]);
 			err_code |= ERR_ALERT | ERR_FATAL;

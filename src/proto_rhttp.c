@@ -45,7 +45,12 @@ struct protocol proto_rhttp = {
 	/* socket layer */
 	.proto_type     = PROTO_TYPE_STREAM,
 	.sock_type      = SOCK_STREAM,
+#ifdef __linux__
+	.sock_prot      = IPPROTO_MPTCP,
+	.sock_prot_fb   = IPPROTO_TCP,
+#else
 	.sock_prot      = IPPROTO_TCP,
+#endif
 	.rx_listening   = rhttp_accepting_conn,
 	.receivers      = LIST_HEAD_INIT(proto_rhttp.receivers),
 };

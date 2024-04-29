@@ -80,7 +80,12 @@ struct protocol proto_tcpv4 = {
 	/* socket layer */
 	.proto_type     = PROTO_TYPE_STREAM,
 	.sock_type      = SOCK_STREAM,
+#ifdef __linux__
+	.sock_prot      = IPPROTO_MPTCP,
+	.sock_prot_fb   = IPPROTO_TCP,
+#else
 	.sock_prot      = IPPROTO_TCP,
+#endif
 	.rx_enable      = sock_enable,
 	.rx_disable     = sock_disable,
 	.rx_unbind      = sock_unbind,
@@ -126,7 +131,12 @@ struct protocol proto_tcpv6 = {
 	/* socket layer */
 	.proto_type     = PROTO_TYPE_STREAM,
 	.sock_type      = SOCK_STREAM,
+#ifdef __linux__
+	.sock_prot      = IPPROTO_MPTCP,
+	.sock_prot_fb   = IPPROTO_TCP,
+#else
 	.sock_prot      = IPPROTO_TCP,
+#endif
 	.rx_enable      = sock_enable,
 	.rx_disable     = sock_disable,
 	.rx_unbind      = sock_unbind,
