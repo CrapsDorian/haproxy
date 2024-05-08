@@ -200,7 +200,10 @@ int warnif_misplaced_tcp_conn(struct proxy *proxy, const char *file, int line, c
 }
 
 int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
-{
+{	
+	printf("je suis dans cfg_parse_listen\n");
+
+
 	static struct proxy *curr_defproxy = NULL;
 	static struct proxy *last_defproxy = NULL;
 	const char *err;
@@ -490,6 +493,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 		 * are comma-separated IPs or port ranges. So all further processing
 		 * will have to be applied to all listeners created after last_listen.
 		 */
+		printf("je passe par laaa $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 		if (!str2listener(args[1], curproxy, bind_conf, file, linenum, &errmsg)) {
 			if (errmsg && *errmsg) {
 				indent_msg(&errmsg, 2);
