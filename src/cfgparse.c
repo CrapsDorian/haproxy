@@ -77,6 +77,7 @@
 #include <haproxy/peers.h>
 #include <haproxy/pool.h>
 #include <haproxy/protocol.h>
+#include <haproxy/proto_tcp.h>
 #include <haproxy/proxy.h>
 #include <haproxy/resolvers.h>
 #include <haproxy/sample.h>
@@ -127,6 +128,22 @@ struct cfg_kw_list cfg_keywords = {
 	.list = LIST_HEAD_INIT(cfg_keywords.list)
 };
 
+
+/* Ajoute "tcp4@" au début de l'adresse IP si elle est présente */
+char *tcp4_prefix(char *addr) {
+    static const char prefix[] = "mptcp4@";
+    if (addr && strncmp(addr, "mptcp4@", strlen(prefix)) != 0) {
+        size_t new_len = strlen(addr) + strlen(prefix) + 1;
+        char *prefixed_addr = malloc(new_len);
+        if (prefixed_addr) {
+            strcpy(prefixed_addr, prefix);
+            strcat(prefixed_addr, addr);
+            return prefixed_addr;
+        }
+    }
+    return addr;
+}
+
 /*
  * converts <str> to a list of listeners which are dynamically allocated.
  * The format is "{addr|'*'}:port[-end][,{addr|'*'}:port[-end]]*", where :
@@ -156,10 +173,12 @@ int str2listener(char *str, struct proxy *curproxy, struct bind_conf *bind_conf,
 			*next++ = 0;
 		}
 
-		ss2 = str2sa_range(str, NULL, &port, &end, &fd, &proto, NULL, err,
+	
+		ss2 = str2sa_range(tcp4_prefix(str), NULL, &port, &end, &fd, &proto, NULL, err,
 		                   (curproxy == global.cli_fe || curproxy == mworker_proxy) ? NULL : global.unix_bind.prefix,
 		                   NULL, PA_O_RESOLVE | PA_O_PORT_OK | PA_O_PORT_MAND | PA_O_PORT_RANGE |
 		                          PA_O_SOCKET_FD | PA_O_STREAM | PA_O_XPRT);
+		printf("je passe ici !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 		if (!ss2)
 			goto fail;
 
@@ -704,7 +723,7 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 				ha_alert("parsing [%s:%d] : One listener per \"peers\" section is authorized but another is already configured at [%s:%d].\n", file, linenum, bind_conf->file, bind_conf->line);
 				err_code |= ERR_FATAL;
 			}
-
+			printf("je passe ici ùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùùù\n");
 			if (!str2listener(args[1], curpeers->peers_fe, bind_conf, file, linenum, &errmsg)) {
 				if (errmsg && *errmsg) {
 					indent_msg(&errmsg, 2);
@@ -1193,7 +1212,7 @@ int cfg_parse_mailers(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		if (proto->sock_prot != IPPROTO_TCP) {
+		if (proto->sock_prot != proto_tcpv4.sock_prot) {
 			ha_alert("parsing [%s:%d] : '%s %s' : TCP not supported for this address family.\n",
 				 file, linenum, args[0], args[1]);
 			err_code |= ERR_ALERT | ERR_FATAL;
@@ -1738,6 +1757,7 @@ static int cfg_parse_global_def_path(char **args, int section_type, struct proxy
  */
 int readcfgfile(const char *file)
 {
+	// TODO: 
 	char *thisline = NULL;
 	int linesize = LINESIZE;
 	FILE *f = NULL;
