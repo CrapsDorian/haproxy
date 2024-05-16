@@ -978,10 +978,7 @@ struct sockaddr_storage *str2sa_range(const char *str, int *port, int *low, int 
 	if (fqdn)
 		*fqdn = NULL;
 
-	printf("str = %s\n", str);
 	str2 = back = env_expand(strdup(str));
-
-	printf("str2 = %s\n", str2);
 	if (str2 == NULL) {
 		memprintf(err, "out of memory in '%s'", __FUNCTION__);
 		goto out;
@@ -1061,17 +1058,13 @@ struct sockaddr_storage *str2sa_range(const char *str, int *port, int *low, int 
 		ss.ss_family = AF_INET;
 		proto_type = PROTO_TYPE_STREAM;
 		ctrl_type = SOCK_STREAM;
-
-		printf(" DANS TCP4@ \n");
 	}
 	else if (strncmp(str2, "mptcp4@", 7) == 0) {
 		str2 += 7;
 		ss.ss_family = AF_INET;
 		proto_type = PROTO_TYPE_STREAM;
 		ctrl_type = SOCK_STREAM;
-		// TODO:
 		mptcp = 1;
-		printf(" DANS MPTCP4@ \n");
 	}
 	else if (strncmp(str2, "udp4@", 5) == 0) {
 		str2 += 5;
@@ -1084,16 +1077,13 @@ struct sockaddr_storage *str2sa_range(const char *str, int *port, int *low, int 
 		ss.ss_family = AF_INET6;
 		proto_type = PROTO_TYPE_STREAM;
 		ctrl_type = SOCK_STREAM;
-		printf(" DANS TCP6@ \n");
 	}
 	else if (strncmp(str2, "mptcp6@", 7) == 0) {
 		str2 += 7;
 		ss.ss_family = AF_INET;
 		proto_type = PROTO_TYPE_STREAM;
 		ctrl_type = SOCK_STREAM;
-		// TODO:
 		mptcp = 1;
-		printf(" DANS MPTCP6@ \n");
 	}
 	else if (strncmp(str2, "udp6@", 5) == 0) {
 		str2 += 5;
@@ -1385,7 +1375,7 @@ struct sockaddr_storage *str2sa_range(const char *str, int *port, int *low, int 
 		 */
 		new_proto = protocol_lookup(ss.ss_family,
 					    proto_type,
-					    ctrl_type == SOCK_DGRAM);
+					    ctrl_type == SOCK_DGRAM || !!mptcp);
 
 		if (!new_proto && (!fqdn || !*fqdn) && (ss.ss_family != AF_CUST_EXISTING_FD)) {
 			memprintf(err, "unsupported %s protocol for %s family %d address '%s'%s",
@@ -1412,12 +1402,6 @@ struct sockaddr_storage *str2sa_range(const char *str, int *port, int *low, int 
 
 	ret = &ss;
  out:
-	if (mptcp)
-#ifndef IPPROTO_MPTCP
-#define IPPROTO_MPTCP 262
-#endif
-// TODO:
-		new_proto->sock_prot = IPPROTO_MPTCP;
 	if (port)
 		*port = porta;
 	if (low)

@@ -47,7 +47,9 @@ void protocol_register(struct protocol *proto)
 	LIST_APPEND(&protocols, &proto->list);
 	__protocol_by_family[sock_domain]
 	                    [proto->proto_type]
-	                    [proto->xprt_type == PROTO_TYPE_DGRAM] = proto;
+	                    [proto->xprt_type == PROTO_TYPE_DGRAM ||
+                         proto->sock_prot == IPPROTO_MPTCP] = proto;
+
 	HA_SPIN_UNLOCK(PROTO_LOCK, &proto_lock);
 }
 
@@ -148,7 +150,7 @@ int protocol_bind_all(int verbose)
 			    !protocol_may_bind_quic(listener))
 				continue;
 #endif
-
+			// TODO: wrong receiver and listener causes Segmentation fault in "sock_inet_bind_receiver"
 			lerr = proto->fam->bind(receiver, &errmsg);
 			err |= lerr;
 

@@ -141,6 +141,35 @@ struct protocol proto_tcpv6 = {
 
 INITCALL1(STG_REGISTER, protocol_register, &proto_tcpv6);
 
+
+struct protocol proto_mptcpv4;
+struct protocol proto_mptcpv6;
+
+static void mptcp_protocol_register(struct protocol *proto)
+{
+	proto->sock_prot = IPPROTO_MPTCP;
+	protocol_register(proto);
+}
+
+static void mptcpv4_protocol_register(struct protocol *proto)
+{
+	proto_mptcpv4 = proto_tcpv4;
+	strcpy(proto_mptcpv4.name, "mptcpv4");
+	mptcp_protocol_register(&proto_mptcpv4);
+}
+
+static void mptcpv6_protocol_register(struct protocol *proto)
+{
+	proto_mptcpv6 = proto_tcpv6;
+	strcpy(proto_mptcpv6.name, "mptcpv6");
+	mptcp_protocol_register(&proto_mptcpv6);
+}
+
+
+INITCALL1(STG_REGISTER, mptcpv4_protocol_register, &proto_mptcpv4);
+INITCALL1(STG_REGISTER, mptcpv6_protocol_register, &proto_mptcpv6);
+
+
 /* Binds ipv4/ipv6 address <local> to socket <fd>, unless <flags> is set, in which
  * case we try to bind <remote>. <flags> is a 2-bit field consisting of :
  *  - 0 : ignore remote address (may even be a NULL pointer)
